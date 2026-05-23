@@ -4,7 +4,7 @@ import pygame
 import sys
 
 # Konfiguracja
-SERVER_IP = '192.168.0.115' # trzeba będzie znaleźć ip serwera
+SERVER_IP = '192.168.0.74' # trzeba będzie znaleźć ip serwera
 SERVER_PORT = 5000
 MAX_PLAYERS = 4
 
