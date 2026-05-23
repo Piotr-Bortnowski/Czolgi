@@ -5,7 +5,6 @@ __pycache__/
 
 # --- ARTEFAKTY PYINSTALLERA ---
 build/
-dist/
 client.spec
 
 # --- SKOMPILOWANY SERWER W C ---
