@@ -1,1 +1,18 @@
-.venv
+# --- PYTHON ---
+.venv/
+__pycache__/
+*.pyc
+
+# --- ARTEFAKTY PYINSTALLERA ---
+build/
+dist/
+client.spec
+
+# --- SKOMPILOWANY SERWER W C ---
+# Ignorujemy pliki wykonywalne serwera, bo każdy powinien skompilować je u siebie
+server
+server.exe
+*.o
+
+# --- IDE (VS Code) ---
+.vscode/
