@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
+#include <netinet/tcp.h>
 #include "protocol.h"
 
 typedef struct {
@@ -243,6 +244,17 @@ int main(int argc, char *argv[]) {
 
     for (;;) {
         connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
+
+        if (connfd < 0) {
+            perror("Blad accept");
+            continue;
+        }
+
+        // --- NOWE: WYŁĄCZENIE ALGORYTMU NAGLE'A DLA TEGO GRACZA ---
+        int flag = 1;
+        if (setsockopt(connfd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(int)) < 0) {
+            perror("Blad ustawiania TCP_NODELAY");
+        }
         
         pthread_mutex_lock(&state_mutex);
         int assigned_id = -1;

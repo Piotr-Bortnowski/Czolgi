@@ -29,9 +29,9 @@ clock = pygame.time.Clock()
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
     sock.connect((SERVER_IP, SERVER_PORT))
+    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 except ConnectionRefusedError:
     print("Nie można połączyć z serwerem. Upewnij się, że serwer w C działa!")
-    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
     sys.exit()
 
 # odebranie id gracza
