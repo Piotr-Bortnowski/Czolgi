@@ -17,10 +17,12 @@ INPUT_FMT = '<6i'
 
 # Tank: int, int, float, float, int (iiffi)
 # Bullet: int, int, float, float, float, float (iiffff)
-STATE_FMT = '<' + ('iiffi' * MAX_PLAYERS) + ('iiffff' * MAX_BULLETS)
+STATE_FMT = '<ii' + ('iiffi' * MAX_PLAYERS) + ('iiffff' * MAX_BULLETS)
 STATE_SIZE = struct.calcsize(STATE_FMT)
 
 pygame.init()
+pygame.font.init()
+ui_font = pygame.font.SysFont('Arial', 40, bold=True)
 screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption("Rozproszone Czołgi - Klient Python")
 clock = pygame.time.Clock()
@@ -53,7 +55,15 @@ WALLS = [
     pygame.Rect(500, 400, 200, 50)
 ]
 
-# pamięć poprzednich pozycji i obrotów
+# kolory graczy
+PLAYER_COLORS = [
+    (34, 139, 34),    # Ciemny zielony
+    (30, 144, 255),   # Niebieski
+    (138, 43, 226),   # Fioletowy
+    (210, 105, 30)    # Pomaranczowy
+]
+
+# pamiec poprzednich pozycji i obrotow
 local_player_angle = 0.0
 enemy_angles = {}
 prev_positions = {}
@@ -126,9 +136,14 @@ while running:
     # 6.2 czolgi, pociski hp
     if game_state_data:
         unpacked = struct.unpack(STATE_FMT, game_state_data)
+
+        game_phase = unpacked[0]
+        countdown = unpacked[1]
+
+        data_offset = 2
         
         for i in range(MAX_PLAYERS):
-            base_idx = i * 5
+            base_idx = data_offset + (i * 5)
             tank_id = unpacked[base_idx]
             active  = unpacked[base_idx + 1]
             x       = unpacked[base_idx + 2]
@@ -136,7 +151,7 @@ while running:
             hp      = unpacked[base_idx + 4]
 
             if active:
-                color = (0, 255, 0) if tank_id == my_id else (255, 0, 0)
+                color = PLAYER_COLORS[tank_id % len(PLAYER_COLORS)]
                 
                 if tank_id == my_id:
                     angle = local_player_angle
@@ -159,7 +174,7 @@ while running:
                 pygame.draw.rect(screen, (0, 255, 0), (int(x), int(y) - 10, int(40 * hp_ratio), 5))
 
         # pociski
-        bullet_offset = MAX_PLAYERS * 5
+        bullet_offset = data_offset + (MAX_PLAYERS * 5)
         for b in range(MAX_BULLETS):
             b_idx = bullet_offset + (b * 6)
             b_active = unpacked[b_idx]
@@ -168,6 +183,19 @@ while running:
             
             if b_active:
                 pygame.draw.rect(screen, (255, 255, 0), (int(b_x), int(b_y), 10, 10))
+
+        if game_phase == 0:
+            text = ui_font.render("Oczekiwanie na graczy... (Min. 2)", True, (255, 255, 255))
+            text_rect = text.get_rect(center=(400, 300))
+            pygame.draw.rect(screen, (0, 0, 0), text_rect)
+            screen.blit(text, text_rect)
+            
+        elif game_phase == 1:
+            seconds_left = math.ceil(countdown / 60)
+            text = ui_font.render(f"Gra startuje za: {seconds_left}", True, (255, 255, 0))
+            text_rect = text.get_rect(center=(400, 300))
+            pygame.draw.rect(screen, (0, 0, 0), text_rect)
+            screen.blit(text, text_rect)
 
     pygame.display.flip()
     clock.tick(60)
