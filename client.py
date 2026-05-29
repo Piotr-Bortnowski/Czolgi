@@ -197,6 +197,40 @@ while running:
             text_rect = text.get_rect(center=(400, 300))
             pygame.draw.rect(screen, (0, 0, 0), text_rect)
             screen.blit(text, text_rect)
+        
+        elif game_phase == 3:
+            winner_id = -1
+            for i in range(MAX_PLAYERS):
+                base_idx = data_offset + (i * 5)
+                t_id = unpacked[base_idx]
+                t_active = unpacked[base_idx + 1]
+                t_hp = unpacked[base_idx + 4]
+                if t_active and t_hp > 0:
+                    winner_id = t_id
+            
+            seconds_left = math.ceil(countdown / 60)
+            
+            # Personalizacja komunikatu
+            if winner_id == my_id:
+                win_text = "Wygrałeś!"
+                text_color = (0, 255, 0) # Zielony
+            elif winner_id != -1:
+                win_text = f"Wygrał Gracz {winner_id}!"
+                text_color = PLAYER_COLORS[winner_id % len(PLAYER_COLORS)] # Kolor zwycięzcy
+            else:
+                win_text = "Remis! Wszyscy zginęli."
+                text_color = (200, 200, 200) # Szary
+                
+            text1 = ui_font.render(win_text, True, text_color)
+            text2 = ui_font.render(f"Nowa runda za: {seconds_left}s", True, (255, 255, 255))
+            
+            rect1 = text1.get_rect(center=(400, 250))
+            rect2 = text2.get_rect(center=(400, 320))
+            
+            pygame.draw.rect(screen, (0, 0, 0), rect1.inflate(20, 20))
+            pygame.draw.rect(screen, (0, 0, 0), rect2.inflate(20, 20))
+            screen.blit(text1, rect1)
+            screen.blit(text2, rect2)
 
     pygame.display.flip()
     clock.tick(60)

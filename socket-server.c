@@ -87,34 +87,69 @@ void *game_loop(void *arg) {
         pthread_mutex_lock(&state_mutex);
         
         // liczenie polaczonych graczy
-        int active_players = 0;
+        int connected_players = 0;
+        int alive_players = 0;
+
         for(int i = 0; i < MAX_PLAYERS; i++) {
-            if(game_state.tanks[i].active) active_players++;
+            if(client_sockets[i] != 0) {
+                connected_players++;
+                // Gracz żyje, jeśli ma aktywne czołg i ponad 0 HP
+                if (game_state.tanks[i].active && game_state.tanks[i].hp > 0) {
+                    alive_players++;
+                }
+            }
         }
 
-        
+        // --- LOGIKA FAZ GRY ---
         if (game_state.game_phase == 0) {
-            // czekanie na 2 graczy
-            if (active_players >= 2) {
+            // Faza 0: Oczekiwanie
+            if (connected_players >= 2) {
+                // ZANIM zaczniemy odliczanie, ożywiamy wszystkich podłączonych 
+                // i resetujemy mapę na nową rundę!
+                for(int i = 0; i < MAX_PLAYERS; i++) {
+                    if (client_sockets[i] != 0) {
+                        game_state.tanks[i].active = 1;
+                        game_state.tanks[i].hp = 100;
+                        game_state.tanks[i].x = spawn_points[i][0];
+                        game_state.tanks[i].y = spawn_points[i][1];
+                        shoot_cooldown[i] = 0;
+                    }
+                }
+                // Czyszczenie starych pocisków
+                for(int b = 0; b < MAX_BULLETS; b++) {
+                    game_state.bullets[b].active = 0;
+                }
+
                 game_state.game_phase = 1;
-                game_state.countdown_timer = 60 * 5; // 5 sekund
+                game_state.countdown_timer = 60 * 5; // 5 sekund odliczania
             }
         } 
         else if (game_state.game_phase == 1) {
-            // odliczanie
-            if (active_players < 2) {
-                // jesli ktos sie odlaczyl to wracamy do czekania
-                game_state.game_phase = 0; 
+            // Faza 1: Odliczanie
+            if (connected_players < 2) {
+                game_state.game_phase = 0; // Ktoś uciekł, wracamy do lobby
             } else {
                 game_state.countdown_timer--;
                 if (game_state.countdown_timer <= 0) {
-                    game_state.game_phase = 2;
+                    game_state.game_phase = 2; // START GRY
                 }
+            }
+        }
+        else if (game_state.game_phase == 3) {
+            // --- NOWA FAZA: EKRAN KOŃCOWY ---
+            game_state.countdown_timer--;
+            if (game_state.countdown_timer <= 0) {
+                game_state.game_phase = 0; // Powrót do czekania/lobby
             }
         }
 
         if (game_state.game_phase == 2)
         {
+            if (alive_players <= 1) {
+                game_state.game_phase = 3; // faza koncowa
+                game_state.countdown_timer = 60 * 5;
+            }
+
             for(int i = 0; i < MAX_PLAYERS; i++) {
                 if(game_state.tanks[i].active) {
                     
