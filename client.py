@@ -5,7 +5,7 @@ import sys
 import math
 
 # Konfiguracja
-SERVER_IP = '127.0.0.1' # trzeba będzie znaleźć ip serwera
+SERVER_IP = '77.236.30.253' # trzeba będzie znaleźć ip serwera
 SERVER_PORT = 5000
 MAX_PLAYERS = 4
 
